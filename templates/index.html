@@ -1,0 +1,898 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ToDo App</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: #f8f9fa;
+            min-height: 100vh;
+            padding: 15px;
+            margin: 0;
+        }
+
+        .container {
+            max-width: 1000px;
+            width: 100%;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            overflow: hidden;
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            min-height: calc(100vh - 30px);
+        }
+
+        /* Calendar Sidebar */
+        .calendar-sidebar {
+            background: #f8f9fa;
+            border-right: 1px solid #e9ecef;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .calendar-header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .calendar-header h2 {
+            font-size: 1.2em;
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .date-picker {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 14px;
+            margin-bottom: 15px;
+            background: white;
+        }
+
+        .date-picker:focus {
+            outline: none;
+            border-color: #ff6b6b;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 12px;
+            border-radius: 8px;
+            text-align: center;
+            border-left: 3px solid #ff6b6b;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+        }
+
+        .stat-number {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+
+        .stat-label {
+            font-size: 0.7em;
+            color: #7f8c8d;
+            margin-top: 2px;
+        }
+
+        .dates-with-todos {
+            margin-top: 15px;
+        }
+
+        .dates-with-todos h4 {
+            font-size: 0.85em;
+            color: #2c3e50;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .date-list {
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .date-item {
+            display: block;
+            padding: 6px 10px;
+            margin-bottom: 4px;
+            background: white;
+            border: 1px solid #e9ecef;
+            border-radius: 5px;
+            text-decoration: none;
+            color: #2c3e50;
+            font-size: 0.8em;
+            transition: all 0.2s ease;
+        }
+
+        .date-item:hover {
+            background: #ff6b6b;
+            color: white;
+        }
+
+        .date-item.active {
+            background: #ff6b6b;
+            color: white;
+        }
+
+        /* Main Content */
+        .main-content {
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            margin-bottom: 20px;
+        }
+
+        .header h1 {
+            font-size: 1.6em;
+            color: #2c3e50;
+            margin-bottom: 5px;
+            font-weight: 600;
+        }
+
+        .date-info {
+            color: #7f8c8d;
+            font-size: 0.85em;
+        }
+
+        .add-task-form {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }        .add-task-input {
+            flex: 1;
+            padding: 12px 16px;
+            border: 2px solid #e9ecef;
+            border-radius: 25px;
+            font-size: 14px;
+            background-color: #f8f9fa;
+            transition: all 0.3s ease;
+        }
+
+        .add-task-input:focus {
+            outline: none;
+            border-color: #ff6b6b;
+            background-color: white;
+            box-shadow: 0 0 0 3px rgba(255, 107, 107, 0.1);
+        }
+
+        .add-task-input::placeholder {
+            color: #9ca3af;
+        }
+
+        .add-btn {
+            background: #ff6b6b;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 25px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+        }
+
+        .add-btn:hover {
+            background: #ff5252;
+            transform: translateY(-1px);
+            box-shadow: 0 3px 10px rgba(255, 107, 107, 0.3);
+        }
+
+        .task-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .task-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 15px;
+            background: white;
+            border: 1px solid #e9ecef;
+            border-radius: 10px;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+
+        .task-item:hover {
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+            transform: translateY(-1px);
+        }
+
+        .task-item.completed {
+            background: #f8f9fa;
+        }        .task-checkbox {
+            width: 18px;
+            height: 18px;
+            border: 2px solid #dee2e6;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+            flex-shrink: 0;
+            position: relative;
+        }
+
+        .task-checkbox:hover {
+            border-color: #28a745;
+        }
+
+        .task-checkbox.completed {
+            background: #28a745;
+            border-color: #28a745;
+        }
+
+        .task-checkbox.completed::after {
+            content: '✓';
+            color: white;
+            font-size: 11px;
+            font-weight: bold;
+        }        .task-content {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            min-height: 20px;
+        }
+
+        .task-text {
+            flex: 1;
+            font-size: 14px;
+            color: #2c3e50;
+            line-height: 1.3;
+            padding: 4px;
+            border-radius: 4px;
+            transition: all 0.2s ease;
+        }
+
+        .task-text.completed {
+            text-decoration: line-through;
+            color: #95a5a6;
+        }
+
+        .task-input {
+            flex: 1;
+            font-size: 14px;
+            color: #2c3e50;
+            line-height: 1.3;
+            padding: 4px;
+            border: 2px solid #ff6b6b;
+            border-radius: 4px;
+            outline: none;
+            background: white;
+        }
+
+        .task-actions {
+            display: flex;
+            gap: 4px;
+            opacity: 0;
+            transition: all 0.2s ease;
+        }
+
+        .task-item:hover .task-actions {
+            opacity: 1;
+        }
+
+        .edit-btn {
+            background: none;
+            border: none;
+            color: #3b82f6;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            padding: 4px;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .edit-btn:hover {
+            background-color: #e6f1ff;
+            color: #2563eb;
+        }
+
+        .delete-btn {
+            background: none;
+            border: none;
+            color: #dc3545;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            padding: 4px;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .delete-btn:hover {
+            background-color: #ffe6e6;
+            color: #dc2626;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9em;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .btn-small {
+            padding: 4px 8px;
+            font-size: 0.75em;
+            min-width: 28px;
+            height: 28px;
+            justify-content: center;
+        }
+
+        .btn-icon {
+            padding: 4px;
+            font-size: 0.9em;
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn-edit {
+            background: #3b82f6;
+            color: white;
+        }
+
+        .btn-edit:hover {
+            background: #2563eb;
+        }
+
+        .btn-delete {
+            background: #ef4444;
+            color: white;
+        }
+
+        .btn-delete:hover {
+            background: #dc2626;
+        }
+
+        .btn-success {
+            background: #10b981;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #059669;
+        }
+
+        .btn-cancel {
+            background: #6b7280;
+            color: white;
+        }
+
+        .btn-cancel:hover {
+            background: #374151;
+        }
+
+        /* Edit Form */
+        .edit-form {
+            display: none;
+            background: white;
+            padding: 12px;
+            border-radius: 6px;
+            border: 2px solid #e2e8f0;
+            margin-top: 8px;
+            position: absolute;
+            right: 0;
+            top: 100%;
+            width: 250px;
+            z-index: 10;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .edit-form.active {
+            display: block;
+        }
+
+        .edit-form input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #d1d5db;
+            border-radius: 4px;
+            margin-bottom: 8px;
+            font-size: 0.85em;
+        }
+
+        .edit-form-actions {
+            display: flex;
+            gap: 8px;
+            justify-content: flex-end;
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .modal.active {
+            display: flex;
+            opacity: 1;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 0;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 400px;
+            max-height: 90vh;
+            overflow-y: auto;
+            transform: scale(0.9);
+            transition: transform 0.3s ease;
+        }
+
+        .modal.active .modal-content {
+            transform: scale(1);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 25px;
+            border-bottom: 1px solid #e2e8f0;
+            background: #f8fafc;
+            border-radius: 12px 12px 0 0;
+        }
+
+        .modal-title {
+            font-size: 1.3em;
+            color: #1f2937;
+            margin: 0;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 1.5em;
+            cursor: pointer;
+            color: #6b7280;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: all 0.3s ease;
+        }
+
+        .close-btn:hover {
+            background: #e5e7eb;
+            color: #374151;
+        }
+
+        .modal form {
+            padding: 25px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #374151;
+            font-size: 0.9em;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #4f46e5;
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #6b7280;
+        }
+
+        .empty-state div {
+            font-size: 4em;
+            margin-bottom: 20px;
+        }
+
+        .empty-state h3 {
+            font-size: 1.5em;
+            margin-bottom: 10px;
+            color: #374151;
+        }
+
+        .empty-state p {
+            font-size: 1em;
+            opacity: 0.8;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+                height: auto;
+            }
+
+            .calendar-sidebar {
+                border-right: none;
+                border-bottom: 2px solid #e2e8f0;
+            }
+
+            .stats {
+                grid-template-columns: 1fr;
+            }
+        }        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 30px 20px;
+            color: #95a5a6;
+        }
+
+        .empty-state div {
+            font-size: 2.5em;
+            margin-bottom: 12px;
+        }
+
+        .empty-state h3 {
+            font-size: 1.1em;
+            margin-bottom: 6px;
+            color: #7f8c8d;
+        }
+
+        .empty-state p {
+            font-size: 0.85em;
+            opacity: 0.8;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .container {
+                grid-template-columns: 1fr;
+                grid-template-rows: auto 1fr;
+                min-height: calc(100vh - 30px);
+            }
+
+            .calendar-sidebar {
+                border-right: none;
+                border-bottom: 1px solid #e9ecef;
+                padding: 15px;
+            }
+
+            .calendar-header h2 {
+                font-size: 1.1em;
+            }
+
+            .stats {
+                grid-template-columns: 1fr 1fr;
+                gap: 8px;
+            }
+
+            .stat-card {
+                padding: 10px;
+            }
+
+            .main-content {
+                padding: 15px;
+            }
+
+            .header h1 {
+                font-size: 1.4em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Calendar Sidebar -->
+        <div class="calendar-sidebar">
+            <div class="calendar-header">
+                <h2>📅 Calendar</h2>
+                <input type="date" class="date-picker" id="datePicker" value="{{ selected_date }}" 
+                       onchange="changeDate(this.value)">
+            </div>
+
+            <div class="stats">
+                <div class="stat-card">
+                    <div class="stat-number">{{ todos|length }}</div>
+                    <div class="stat-label">Today's Tasks</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">{{ todos|selectattr('completed')|list|length }}</div>
+                    <div class="stat-label">Completed</div>
+                </div>
+            </div>
+
+            {% if dates_with_todos %}
+            <div class="dates-with-todos">
+                <h4>📋 Dates with Tasks</h4>
+                <div class="date-list">
+                    {% for date in dates_with_todos %}
+                    <a href="?date={{ date }}" class="date-item {% if date == selected_date %}active{% endif %}">
+                        {{ date }}
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <div class="header">
+                <h1>My Tasks</h1>
+                <div class="date-info">{{ selected_date }}</div>
+            </div>
+
+            <form class="add-task-form" id="taskForm">
+                <input type="text" class="add-task-input" id="taskInput" placeholder="Add your task" required>
+                <button type="submit" class="add-btn">ADD</button>
+            </form>
+
+            <div class="task-list">
+            {% if todos %}
+                {% for todo in todos %}                <div class="task-item {% if todo.completed %}completed{% endif %}" data-task-id="{{ todo.id }}">
+                    <div class="task-checkbox {% if todo.completed %}completed{% endif %}" 
+                         onclick="toggleTodo('{{ todo.id }}', '{{ selected_date }}')">
+                    </div>
+                    
+                    <div class="task-content">
+                        <div class="task-text {% if todo.completed %}completed{% endif %}" 
+                             id="task-text-{{ todo.id }}">{{ todo.task }}</div>
+                        <input type="text" class="task-input" 
+                               id="task-input-{{ todo.id }}" 
+                               value="{{ todo.task }}" 
+                               style="display: none;"
+                               onblur="saveEdit('{{ todo.id }}', '{{ selected_date }}')"
+                               onkeypress="handleKeyPress(event, '{{ todo.id }}', '{{ selected_date }}')">
+                    </div>
+                    
+                    <div class="task-actions">
+                        <button class="edit-btn" onclick="startEdit('{{ todo.id }}')" title="Edit">
+                            ✏️
+                        </button>
+                        <button class="delete-btn" onclick="deleteTodo('{{ todo.id }}', '{{ selected_date }}')" title="Delete">
+                            🗑️
+                        </button>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="empty-state">
+                    <div>📝</div>
+                    <h3>No tasks yet</h3>
+                    <p>Add your first task above!</p>
+                </div>            {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Date change functionality
+        function changeDate(newDate) {
+            window.location.href = '?date=' + newDate;
+        }        function toggleTodo(todoId, date) {
+            // Add loading state
+            const taskItem = document.querySelector(`[data-task-id="${todoId}"]`);
+            const checkbox = taskItem.querySelector('.task-checkbox');
+            const originalContent = checkbox.innerHTML;
+            checkbox.innerHTML = '⏳';
+            
+            fetch('/toggle_todo', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    id: todoId,
+                    date: date
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Reload to show the new sorting (completed tasks move to end)
+                    location.reload();
+                } else {
+                    checkbox.innerHTML = originalContent;
+                    alert('Failed to update task');
+                }
+            })
+            .catch(error => {
+                checkbox.innerHTML = originalContent;
+                console.error('Error:', error);
+                alert('Failed to update task');
+            });
+        }
+
+        function deleteTodo(todoId, date) {
+            if (confirm('Are you sure you want to delete this task?')) {
+                fetch('/delete_todo', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        id: todoId,
+                        date: date
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        location.reload();
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Failed to delete task');
+                });
+            }
+        }
+
+        function startEdit(todoId) {
+            const textElement = document.getElementById('task-text-' + todoId);
+            const inputElement = document.getElementById('task-input-' + todoId);
+            
+            textElement.style.display = 'none';
+            inputElement.style.display = 'block';
+            inputElement.focus();
+            inputElement.select();
+        }
+
+        function saveEdit(todoId, date) {
+            const textElement = document.getElementById('task-text-' + todoId);
+            const inputElement = document.getElementById('task-input-' + todoId);
+            const newTask = inputElement.value.trim();
+
+            if (!newTask) {
+                alert('Task cannot be empty');
+                inputElement.focus();
+                return;
+            }
+
+            fetch('/edit_todo', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    id: todoId,
+                    task: newTask,
+                    date: date
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    textElement.textContent = newTask;
+                    textElement.style.display = 'block';
+                    inputElement.style.display = 'none';
+                } else {
+                    alert(data.error || 'Failed to update task');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Failed to update task');
+            });
+        }
+
+        function handleKeyPress(event, todoId, date) {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                saveEdit(todoId, date);
+            } else if (event.key === 'Escape') {
+                const textElement = document.getElementById('task-text-' + todoId);
+                const inputElement = document.getElementById('task-input-' + todoId);
+                
+                textElement.style.display = 'block';
+                inputElement.style.display = 'none';
+            }
+        }
+
+        // Event Listeners
+        document.addEventListener('DOMContentLoaded', function() {
+            // Task form submission
+            document.getElementById('taskForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const task = document.getElementById('taskInput').value.trim();
+                const selectedDate = '{{ selected_date }}';
+
+                if (!task) {
+                    alert('Task cannot be empty');
+                    return;
+                }
+
+                fetch('/add_todo', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        task: task,
+                        date: selectedDate
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        location.reload();
+                    } else {
+                        alert(data.error || 'Failed to add task');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Failed to add task');
+                });
+            });
+        });
+    </script>
+</body>
+</html>
